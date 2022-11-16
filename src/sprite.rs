@@ -35,6 +35,7 @@ impl Sprite {
             pixels,
         }
     }
+
     pub fn draw(&self, screen: &mut [u32], screen_width: u32, screen_height: u32) {
         if (self.origin.x < 0.0 || self.origin.y < 0.0) {
             return;

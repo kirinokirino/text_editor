@@ -1,4 +1,4 @@
-use minifb::{Key, Window, WindowOptions};
+use minifb::{Key, KeyRepeat, Window, WindowOptions};
 
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -82,15 +82,49 @@ fn main() {
         }
     }
 
+    let mut line = 20;
+    let mut column = 10;
+    let mut cursor = Sprite::new(
+        Vec2::new((char_width * column) as f32, (char_height * line) as f32),
+        Size::new(
+            char_width.try_into().unwrap(),
+            char_height.try_into().unwrap(),
+        ),
+        font.get("_").unwrap().pixels.clone(),
+    );
+    let mut eraser = Sprite::new(
+        Vec2::new((char_width * column) as f32, (char_height * line) as f32),
+        Size::new(
+            char_width.try_into().unwrap(),
+            char_height.try_into().unwrap(),
+        ),
+        font.get(" ").unwrap().pixels.clone(),
+    );
     while window.is_open() && !window.is_key_down(Key::Escape) {
+		eraser.origin = cursor.origin;
+		eraser.draw(&mut buffer, WIDTH as u32, HEIGHT as u32);
+    	
         for sprite in &sprites {
             sprite.draw(&mut buffer, WIDTH as u32, HEIGHT as u32);
         }
+        
+		cursor.origin = Vec2::new((char_width * column) as f32, (char_height * line) as f32);
+        cursor.draw(&mut buffer, WIDTH as u32, HEIGHT as u32);
 
         // We unwrap here as we want this code to exit if it fails. Real applications may want to handle this in a different way
         window.update_with_buffer(&buffer, WIDTH, HEIGHT).unwrap();
 
         let mut keys = keys_data.borrow_mut();
+
+        for k in window.get_keys_pressed(KeyRepeat::No).iter() {
+            match k {
+                Key::Left => column -= 1,
+                Key::Right => column += 1,
+                Key::Down => line += 1,
+                Key::Up => line -= 1,
+                _ => (),
+            }
+        }
 
         for t in keys.iter() {
             println!("Code point: {},   Character: {:?}", *t, char::from_u32(*t));
