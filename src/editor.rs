@@ -154,10 +154,16 @@ impl Editor {
 
     pub fn cursor_move_up(&mut self, amount: u32) {
         self.cursor.y = self.cursor.y.saturating_sub(amount);
+        if (self.cursor.y < self.viewport_position.y + 3 && self.viewport_position.y > 0) {
+            self.viewport_position.y -= 1;
+        }
     }
 
     pub fn cursor_move_down(&mut self, amount: u32) {
         self.cursor.y = self.cursor.y.saturating_add(amount);
+        if (self.cursor.y > self.viewport_position.y + self.viewport_size.1 as u32 - 3) {
+            self.viewport_position.y += 1;
+        }
     }
 
     pub fn cursor_move_left(&mut self, amount: u32) {
@@ -186,14 +192,19 @@ impl Editor {
                 if ch.is_control() || ch.is_whitespace() {
                     continue;
                 }
-                ascii[self.font.index(ch)]
-                    .push((x as usize * CHAR_WIDTH, y as usize * CHAR_HEIGHT));
+                ascii[self.font.index(ch)].push((
+                    (x - self.viewport_position.x) as usize * CHAR_WIDTH,
+                    (y - self.viewport_position.y) as usize * CHAR_HEIGHT,
+                ));
             }
         }
         ascii
     }
 
     pub fn draw_char(&mut self, ch: char, pos: GridPosition, screen: &mut [u32]) {
+        if (!pos.is_inside(&self.viewport_position, &self.viewport_end())) {
+            return;
+        }
         let sprite = self.font.letter(ch).pixels;
         for y in 0..CHAR_HEIGHT {
             for x in 0..CHAR_WIDTH {
@@ -201,8 +212,9 @@ impl Editor {
                 if pixel == 0 {
                     continue;
                 };
-                screen[(pos.y as usize * CHAR_HEIGHT + y) * self.screen_width
-                    + (pos.x as usize * CHAR_WIDTH + x)] = pixel;
+                screen[((pos.y - self.viewport_position.y) as usize * CHAR_HEIGHT + y)
+                    * self.screen_width
+                    + ((pos.x - self.viewport_position.x) as usize * CHAR_WIDTH + x)] = pixel;
             }
         }
     }
@@ -227,6 +239,7 @@ impl Editor {
                 }
             }
         }
+        dbg!(&self.viewport_position, &self.cursor);
         self.draw_char('_', self.cursor, screen);
     }
 }
