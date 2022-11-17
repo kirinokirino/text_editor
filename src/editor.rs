@@ -239,7 +239,6 @@ impl Editor {
                 }
             }
         }
-        dbg!(&self.viewport_position, &self.cursor);
         self.draw_char('_', self.cursor, screen);
     }
 }
