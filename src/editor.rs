@@ -131,17 +131,21 @@ impl Editor {
     }
 
     pub fn backspace(&mut self) {
-    	if self.cursor.x >= 1 {
-    		self.cursor_move_left(1);
-    		self.delete();
-    	}
+        if self.cursor.x >= 1 {
+            self.cursor_move_left(1);
+            self.delete();
+        }
     }
 
     pub fn delete(&mut self) {
-    	let position = self.cursor;
-    	if self.text.len() <= position.y as usize { return; }
-    	if self.text[position.y as usize].len() <= position.x as usize { return; }
-    	self.text[position.y as usize].remove(position.x as usize);
+        let position = self.cursor;
+        if self.text.len() <= position.y as usize {
+            return;
+        }
+        if self.text[position.y as usize].len() <= position.x as usize {
+            return;
+        }
+        self.text[position.y as usize].remove(position.x as usize);
     }
 
     pub fn newline(&mut self) {
@@ -200,6 +204,12 @@ impl Editor {
                 screen[(pos.y as usize * CHAR_HEIGHT + y) * self.screen_width
                     + (pos.x as usize * CHAR_WIDTH + x)] = pixel;
             }
+        }
+    }
+
+    pub fn set_text(&mut self, text: String) {
+        for line in text.lines() {
+            self.text.push(line.to_string());
         }
     }
 
