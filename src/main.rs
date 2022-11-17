@@ -38,13 +38,15 @@ fn main() {
                 Key::Down => editor.cursor_move_down(1),
                 Key::Up => editor.cursor_move_up(1),
                 Key::Enter => editor.newline(),
+                Key::Delete => editor.delete(),
+                Key::Backspace => editor.backspace(),
                 _ => (),
             }
         }
 
         for key in keys.iter() {
             if let Some(ch) = char::from_u32(*key) {
-                if ch.is_ascii() {
+                if ch.is_ascii_alphanumeric() || ch.is_ascii_punctuation() || ch == ' ' {
                     editor.type_char(ch);
                 }
             }

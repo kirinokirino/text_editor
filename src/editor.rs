@@ -126,8 +126,22 @@ impl Editor {
         while self.text[position.y as usize].len() < position.x as usize {
             self.text[position.y as usize].push(' ');
         }
-        self.text[position.y as usize].push(ch);
+        self.text[position.y as usize].insert(position.x as usize, ch);
         self.cursor_move_right(1);
+    }
+
+    pub fn backspace(&mut self) {
+    	if self.cursor.x >= 1 {
+    		self.cursor_move_left(1);
+    		self.delete();
+    	}
+    }
+
+    pub fn delete(&mut self) {
+    	let position = self.cursor;
+    	if self.text.len() <= position.y as usize { return; }
+    	if self.text[position.y as usize].len() <= position.x as usize { return; }
+    	self.text[position.y as usize].remove(position.x as usize);
     }
 
     pub fn newline(&mut self) {
@@ -179,9 +193,12 @@ impl Editor {
         let sprite = self.font.letter(ch).pixels;
         for y in 0..CHAR_HEIGHT {
             for x in 0..CHAR_WIDTH {
-            	let pixel = u32::from(sprite[(y * CHAR_WIDTH) + x]);
-            	if (pixel == 0) { continue };
-                screen[(pos.y as usize * CHAR_HEIGHT + y) * self.screen_width + (pos.x as usize * CHAR_WIDTH + x)] = pixel;
+                let pixel = u32::from(sprite[(y * CHAR_WIDTH) + x]);
+                if pixel == 0 {
+                    continue;
+                };
+                screen[(pos.y as usize * CHAR_HEIGHT + y) * self.screen_width
+                    + (pos.x as usize * CHAR_WIDTH + x)] = pixel;
             }
         }
     }
