@@ -123,7 +123,7 @@ impl Editor {
         while self.text.len() <= position.y as usize {
             self.text.push(String::new());
         }
-        while self.text[position.y as usize].len() <= position.x as usize {
+        while self.text[position.y as usize].len() < position.x as usize {
             self.text[position.y as usize].push(' ');
         }
         self.text[position.y as usize].push(ch);
@@ -165,7 +165,7 @@ impl Editor {
                 ..min(self.viewport_end().x, self.text[y as usize].len() as u32)
             {
                 let ch = self.text[y as usize].as_bytes()[x as usize] as char;
-                if ch.is_whitespace() {
+                if ch.is_control() || ch.is_whitespace() {
                     continue;
                 }
                 ascii[self.font.index(ch)]
@@ -173,6 +173,17 @@ impl Editor {
             }
         }
         ascii
+    }
+
+    pub fn draw_char(&mut self, ch: char, pos: GridPosition, screen: &mut [u32]) {
+        let sprite = self.font.letter(ch).pixels;
+        for y in 0..CHAR_HEIGHT {
+            for x in 0..CHAR_WIDTH {
+            	let pixel = u32::from(sprite[(y * CHAR_WIDTH) + x]);
+            	if (pixel == 0) { continue };
+                screen[(pos.y as usize * CHAR_HEIGHT + y) * self.screen_width + (pos.x as usize * CHAR_WIDTH + x)] = pixel;
+            }
+        }
     }
 
     pub fn draw(&mut self, screen: &mut [u32]) {
@@ -189,5 +200,6 @@ impl Editor {
                 }
             }
         }
+        self.draw_char('_', self.cursor, screen);
     }
 }
