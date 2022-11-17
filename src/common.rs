@@ -1,21 +1,21 @@
 use std::convert::From;
 
 #[derive(Debug, Clone, Copy)]
-pub struct RGB {
+pub struct Rgb {
     pub r: u8,
     pub g: u8,
     pub b: u8,
 }
 
-impl RGB {
+impl Rgb {
     pub fn new(r: u8, g: u8, b: u8) -> Self {
         Self { r, g, b }
     }
 }
 
-impl From<RGB> for u32 {
-    fn from(pixel: RGB) -> Self {
-        0 | ((pixel.r as u32) << 16) | ((pixel.g as u32) << 8) | ((pixel.b as u32) << 0)
+impl From<Rgb> for u32 {
+    fn from(pixel: Rgb) -> Self {
+        ((pixel.r as u32) << 16) | ((pixel.g as u32) << 8) | (pixel.b as u32)
     }
 }
 
@@ -28,6 +28,10 @@ pub struct GridPosition {
 impl GridPosition {
     pub fn new(x: u32, y: u32) -> Self {
         Self { x, y }
+    }
+    
+    pub fn is_inside(&self, from: &GridPosition, to: &GridPosition) -> bool {
+        self.x >= from.x && self.x < to.x && self.y >= from.y && self.y < to.y
     }
 }
 

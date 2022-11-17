@@ -2,13 +2,13 @@ use std::fs;
 use std::io;
 use std::path::Path;
 
-use crate::common::{GridPosition, RGB};
+use crate::common::{GridPosition, Rgb};
 
 const CHAR_WIDTH: usize = 9;
 const CHAR_HEIGHT: usize = 14;
 
 struct LetterSprite {
-    pub pixels: [RGB; CHAR_WIDTH * CHAR_HEIGHT],
+    pub pixels: [Rgb; CHAR_WIDTH * CHAR_HEIGHT],
 }
 
 impl LetterSprite {
@@ -40,21 +40,21 @@ impl LetterSprite {
             use std::mem;
             assert!(width == CHAR_WIDTH);
             assert!(height == CHAR_HEIGHT);
-            let mut p: [mem::MaybeUninit<RGB>; CHAR_HEIGHT * CHAR_WIDTH] =
+            let mut p: [mem::MaybeUninit<Rgb>; CHAR_HEIGHT * CHAR_WIDTH] =
                 unsafe { mem::MaybeUninit::uninit().assume_init() };
             for y in 0..height {
                 for x in 0..width {
                     let r = data[y * width * 3 + x * 3];
                     let g = data[y * width * 3 + x * 3 + 1];
                     let b = data[y * width * 3 + x * 3 + 2];
-                    p[y * width + x] = mem::MaybeUninit::new(RGB::new(
+                    p[y * width + x] = mem::MaybeUninit::new(Rgb::new(
                         r.parse::<u8>().unwrap(),
                         g.parse::<u8>().unwrap(),
                         b.parse::<u8>().unwrap(),
                     ));
                 }
             }
-            let pixels = unsafe { mem::transmute::<_, [RGB; CHAR_HEIGHT * CHAR_WIDTH]>(p) };
+            let pixels = unsafe { mem::transmute::<_, [Rgb; CHAR_HEIGHT * CHAR_WIDTH]>(p) };
             return Ok(Self { pixels });
         }
 
@@ -73,15 +73,15 @@ struct Font {
 impl Font {
     pub fn new() -> Self {
         let mut letters = Vec::with_capacity(ASCII.len());
-        const file_extension: &str = ".ppt";
-        const font_folder: &str = "font/";
-        for (i, letter) in ASCII.chars().enumerate() {
+        const FILE_EXTENSION: &str = ".ppt";
+        const FONT_FOLDER: &str = "font/";
+        for (_i, letter) in ASCII.chars().enumerate() {
             let file_name: String = if letter == '/' {
                 "slash".to_string()
             } else {
                 letter.to_string()
             };
-            let file_path = format!("{font_folder}{file_name}{file_extension}");
+            let file_path = format!("{FONT_FOLDER}{file_name}{FILE_EXTENSION}");
             letters.push(LetterSprite::new(file_path).unwrap());
         }
         Self { letters }
@@ -115,10 +115,10 @@ impl Editor {
 
     pub fn type_char(&mut self, ch: char) {
         let position = self.cursor;
-        while (self.text.len() <= position.y as usize) {
+        while self.text.len() <= position.y as usize {
             self.text.push(String::new());
         }
-        while (self.text[position.y as usize].len() <= position.x as usize) {
+        while self.text[position.y as usize].len() <= position.x as usize {
             self.text[position.y as usize].push(' ');
         }
         self.text[position.y as usize].push(ch);
@@ -126,8 +126,7 @@ impl Editor {
     }
 
     pub fn newline(&mut self) {
-    	self.cursor.y = self.cursor.y.saturating_add(1);
-    	self.cursor.x = 0;
+        self.cursor = GridPosition::new(0, self.cursor.y.saturating_add(1));
     }
 
     pub fn cursor_move_up(&mut self, amount: u32) {
@@ -146,10 +145,6 @@ impl Editor {
         self.cursor.x = self.cursor.x.saturating_add(amount);
     }
 
-    pub fn check_bounds(position: &GridPosition, from: &GridPosition, to: &GridPosition) -> bool {
-        position.x >= from.x && position.x < to.x && position.y >= from.y && position.y < to.y
-    }
-
     pub fn draw(&mut self, screen: &mut [u32]) {
         let viewport_end_x = self.viewport_position.x as usize + self.viewport_size.0;
         let viewport_end_y = self.viewport_position.y as usize + self.viewport_size.1;
@@ -162,13 +157,19 @@ impl Editor {
         //filter positions self.check_bounds(position, self.viewport_position, viewport_end)
         let screen_positions: Vec<(usize, usize)> = positions
             .into_iter()
-            .map(|pos| (pos.x as usize * CHAR_WIDTH, pos.y as usize * CHAR_HEIGHT))
+            .filter_map(|pos| {
+                if pos.is_inside(&self.viewport_position, &viewport_end) {
+                    return Some((pos.x as usize * CHAR_WIDTH, pos.y as usize * CHAR_HEIGHT));
+                } 
+                    None
+                
+            })
             .collect();
         for y in 0..CHAR_HEIGHT {
             for x in 0..CHAR_WIDTH {
                 let pixel = u32::from(sprite[(y * CHAR_WIDTH) + x]);
                 for (screen_x, screen_y) in &screen_positions {
-                    screen[((screen_y + y) * self.screen_width as usize) + screen_x + x] = pixel;
+                    screen[((screen_y + y) * self.screen_width) + screen_x + x] = pixel;
                 }
             }
         }

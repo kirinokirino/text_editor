@@ -1,8 +1,7 @@
 use minifb::{Key, KeyRepeat, Window, WindowOptions};
 
 use std::cell::RefCell;
-use std::collections::HashMap;
-use std::fs::{read_dir, read_to_string};
+
 use std::rc::Rc;
 
 mod common;
@@ -46,7 +45,7 @@ fn main() {
 
         for key in keys.iter() {
             if let Some(ch) = char::from_u32(*key) {
-                if (ch.is_ascii()) {
+                if ch.is_ascii() {
                     editor.type_char(ch);
                 }
             }
