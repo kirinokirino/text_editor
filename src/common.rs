@@ -29,7 +29,7 @@ impl GridPosition {
     pub fn new(x: u32, y: u32) -> Self {
         Self { x, y }
     }
-    
+
     pub fn is_inside(&self, from: &GridPosition, to: &GridPosition) -> bool {
         self.x >= from.x && self.x < to.x && self.y >= from.y && self.y < to.y
     }
@@ -61,12 +61,4 @@ impl Size {
     pub fn area(&self) -> u32 {
         self.width * self.height
     }
-}
-
-pub fn min(of: i32, or: i32) -> i32 {
-    of.min(or)
-}
-
-pub fn max(of: i32, or: i32) -> i32 {
-    of.max(or)
 }

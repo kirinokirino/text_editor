@@ -1,7 +1,6 @@
 use minifb::{Key, KeyRepeat, Window, WindowOptions};
 
 use std::cell::RefCell;
-
 use std::rc::Rc;
 
 mod common;

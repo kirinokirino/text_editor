@@ -1,3 +1,4 @@
+use std::cmp::min;
 use std::fs;
 use std::io;
 use std::path::Path;
@@ -90,6 +91,10 @@ impl Font {
     pub fn letter(&self, ch: char) -> &LetterSprite {
         &self.letters[ch as usize - 33]
     }
+
+    pub fn index(&self, ch: char) -> usize {
+        ch as usize - 33
+    }
 }
 
 pub struct Editor {
@@ -145,31 +150,42 @@ impl Editor {
         self.cursor.x = self.cursor.x.saturating_add(amount);
     }
 
-    pub fn draw(&mut self, screen: &mut [u32]) {
+    fn viewport_end(&self) -> GridPosition {
         let viewport_end_x = self.viewport_position.x as usize + self.viewport_size.0;
         let viewport_end_y = self.viewport_position.y as usize + self.viewport_size.1;
 
-        let viewport_end = GridPosition::new(viewport_end_x as u32, viewport_end_y as u32);
+        GridPosition::new(viewport_end_x as u32, viewport_end_y as u32)
+    }
 
-        let sprite = self.font.letter('_').pixels;
-        let positions = vec![self.cursor];
+    fn occupied_grid_cells(&self) -> Vec<Vec<(usize, usize)>> {
+        let mut ascii = vec![Vec::new(); ASCII.len()];
 
-        //filter positions self.check_bounds(position, self.viewport_position, viewport_end)
-        let screen_positions: Vec<(usize, usize)> = positions
-            .into_iter()
-            .filter_map(|pos| {
-                if pos.is_inside(&self.viewport_position, &viewport_end) {
-                    return Some((pos.x as usize * CHAR_WIDTH, pos.y as usize * CHAR_HEIGHT));
-                } 
-                    None
-                
-            })
-            .collect();
-        for y in 0..CHAR_HEIGHT {
-            for x in 0..CHAR_WIDTH {
-                let pixel = u32::from(sprite[(y * CHAR_WIDTH) + x]);
-                for (screen_x, screen_y) in &screen_positions {
-                    screen[((screen_y + y) * self.screen_width) + screen_x + x] = pixel;
+        for y in self.viewport_position.y..min(self.viewport_end().y, self.text.len() as u32) {
+            for x in self.viewport_position.x
+                ..min(self.viewport_end().x, self.text[y as usize].len() as u32)
+            {
+                let ch = self.text[y as usize].as_bytes()[x as usize] as char;
+                if ch.is_whitespace() {
+                    continue;
+                }
+                ascii[self.font.index(ch)]
+                    .push((x as usize * CHAR_WIDTH, y as usize * CHAR_HEIGHT));
+            }
+        }
+        ascii
+    }
+
+    pub fn draw(&mut self, screen: &mut [u32]) {
+        let occupied = self.occupied_grid_cells();
+        for (i, ch) in ASCII.chars().enumerate() {
+            let sprite = self.font.letter(ch).pixels;
+            let positions = &occupied[i];
+            for y in 0..CHAR_HEIGHT {
+                for x in 0..CHAR_WIDTH {
+                    let pixel = u32::from(sprite[(y * CHAR_WIDTH) + x]);
+                    for (screen_x, screen_y) in positions {
+                        screen[((screen_y + y) * self.screen_width) + screen_x + x] = pixel;
+                    }
                 }
             }
         }
