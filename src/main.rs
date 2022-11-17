@@ -33,18 +33,23 @@ fn main() {
 
         let mut keys = keys_data.borrow_mut();
 
-        for k in window.get_keys_pressed(KeyRepeat::No).iter() {
-            match k {
+        for key in window.get_keys_pressed(KeyRepeat::No).iter() {
+            match key {
                 Key::Left => editor.cursor_move_left(1),
                 Key::Right => editor.cursor_move_right(1),
                 Key::Down => editor.cursor_move_down(1),
                 Key::Up => editor.cursor_move_up(1),
+                Key::Enter => editor.newline(),
                 _ => (),
             }
         }
 
-        for t in keys.iter() {
-            println!("Code point: {},   Character: {:?}", *t, char::from_u32(*t));
+        for key in keys.iter() {
+            if let Some(ch) = char::from_u32(*key) {
+                if (ch.is_ascii()) {
+                    editor.type_char(ch);
+                }
+            }
         }
 
         keys.clear();

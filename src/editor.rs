@@ -113,7 +113,22 @@ impl Editor {
         }
     }
 
-    
+    pub fn type_char(&mut self, ch: char) {
+        let position = self.cursor;
+        while (self.text.len() <= position.y as usize) {
+            self.text.push(String::new());
+        }
+        while (self.text[position.y as usize].len() <= position.x as usize) {
+            self.text[position.y as usize].push(' ');
+        }
+        self.text[position.y as usize].push(ch);
+        self.cursor_move_right(1);
+    }
+
+    pub fn newline(&mut self) {
+    	self.cursor.y = self.cursor.y.saturating_add(1);
+    	self.cursor.x = 0;
+    }
 
     pub fn cursor_move_up(&mut self, amount: u32) {
         self.cursor.y = self.cursor.y.saturating_sub(amount);
