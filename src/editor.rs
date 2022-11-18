@@ -97,6 +97,12 @@ impl Font {
     }
 }
 
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum EditorMode {
+    normal,
+    insert,
+}
+
 pub struct Editor {
     cursor: GridPosition,
     viewport_position: GridPosition,
@@ -104,6 +110,7 @@ pub struct Editor {
     font: Font,
     screen_width: usize,
     text: Vec<String>,
+    pub mode: EditorMode,
 }
 
 impl Editor {
@@ -115,10 +122,14 @@ impl Editor {
             font: Font::new(),
             screen_width,
             text: Vec::new(),
+            mode: EditorMode::normal,
         }
     }
 
     pub fn type_char(&mut self, ch: char) {
+        if (self.mode != EditorMode::insert) {
+            return;
+        }
         let position = self.cursor;
         while self.text.len() <= position.y as usize {
             self.text.push(String::new());
@@ -128,6 +139,14 @@ impl Editor {
         }
         self.text[position.y as usize].insert(position.x as usize, ch);
         self.cursor_move_right(1);
+    }
+
+    pub fn normal_mode(&mut self) {
+        self.mode = EditorMode::normal;
+    }
+
+    pub fn insert_mode(&mut self) {
+        self.mode = EditorMode::insert;
     }
 
     pub fn backspace(&mut self) {
@@ -154,14 +173,14 @@ impl Editor {
 
     pub fn cursor_move_up(&mut self, amount: u32) {
         self.cursor.y = self.cursor.y.saturating_sub(amount);
-        if (self.cursor.y < self.viewport_position.y + 3 && self.viewport_position.y > 0) {
+        if self.cursor.y < self.viewport_position.y + 3 && self.viewport_position.y > 0 {
             self.viewport_position.y -= 1;
         }
     }
 
     pub fn cursor_move_down(&mut self, amount: u32) {
         self.cursor.y = self.cursor.y.saturating_add(amount);
-        if (self.cursor.y > self.viewport_position.y + self.viewport_size.1 as u32 - 3) {
+        if self.cursor.y > self.viewport_position.y + self.viewport_size.1 as u32 - 3 {
             self.viewport_position.y += 1;
         }
     }
@@ -202,7 +221,7 @@ impl Editor {
     }
 
     pub fn draw_char(&mut self, ch: char, pos: GridPosition, screen: &mut [u32]) {
-        if (!pos.is_inside(&self.viewport_position, &self.viewport_end())) {
+        if !pos.is_inside(&self.viewport_position, &self.viewport_end()) {
             return;
         }
         let sprite = self.font.letter(ch).pixels;

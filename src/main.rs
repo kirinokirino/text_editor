@@ -10,7 +10,7 @@ mod common;
 mod editor;
 
 use cli::Arguments;
-use editor::Editor;
+use editor::{Editor, EditorMode};
 
 const WIDTH: usize = 640;
 const HEIGHT: usize = 480;
@@ -19,7 +19,7 @@ fn main() {
     let args = Arguments::new();
     let mut path = current_dir().unwrap();
     let mut starting_text = String::new();
-    if (args.unnamed.len() == 1) {
+    if args.unnamed.len() == 1 {
         path.push(args.unnamed[0].clone());
         if let Ok(contents) = fs::read_to_string(path) {
             starting_text = contents;
@@ -37,7 +37,7 @@ fn main() {
 
     let mut editor = Editor::new(WIDTH, HEIGHT);
     editor.set_text(starting_text);
-    while window.is_open() && !window.is_key_down(Key::Escape) {
+    'running: while window.is_open() {
         let mut buffer: Vec<u32> = vec![0; WIDTH * HEIGHT];
         // We unwrap here as we want this code to exit if it fails. Real applications may want to handle this in a different way
         editor.draw(&mut buffer);
@@ -51,6 +51,38 @@ fn main() {
                 Key::Right => editor.cursor_move_right(1),
                 Key::Down => editor.cursor_move_down(1),
                 Key::Up => editor.cursor_move_up(1),
+                Key::I => editor.insert_mode(),
+                Key::C => {
+                    if window.is_key_down(Key::LeftCtrl) || window.is_key_down(Key::RightCtrl) {
+                        break 'running;
+                    }
+                }
+                Key::Apostrophe => {
+                    if editor.mode == EditorMode::normal {
+                        break 'running;
+                    }
+                }
+                Key::Period => {
+                    if editor.mode == EditorMode::normal {
+                        editor.cursor_move_up(1)
+                    }
+                }
+                Key::Escape => editor.normal_mode(),
+                Key::E => {
+                    if editor.mode == EditorMode::normal {
+                        editor.cursor_move_down(1)
+                    }
+                }
+                Key::O => {
+                    if editor.mode == EditorMode::normal {
+                        editor.cursor_move_left(1)
+                    }
+                }
+                Key::U => {
+                    if editor.mode == EditorMode::normal {
+                        editor.cursor_move_right(1)
+                    }
+                }
                 Key::Enter => editor.newline(),
                 Key::Delete => editor.delete(),
                 Key::Backspace => editor.backspace(),
