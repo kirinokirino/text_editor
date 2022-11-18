@@ -58,28 +58,28 @@ fn main() {
                     }
                 }
                 Key::Apostrophe => {
-                    if editor.mode == EditorMode::normal {
+                    if editor.mode == EditorMode::Normal {
                         break 'running;
                     }
                 }
                 Key::Period => {
-                    if editor.mode == EditorMode::normal {
+                    if editor.mode == EditorMode::Normal {
                         editor.cursor_move_up(1)
                     }
                 }
                 Key::Escape => editor.normal_mode(),
                 Key::E => {
-                    if editor.mode == EditorMode::normal {
+                    if editor.mode == EditorMode::Normal {
                         editor.cursor_move_down(1)
                     }
                 }
                 Key::O => {
-                    if editor.mode == EditorMode::normal {
+                    if editor.mode == EditorMode::Normal {
                         editor.cursor_move_left(1)
                     }
                 }
                 Key::U => {
-                    if editor.mode == EditorMode::normal {
+                    if editor.mode == EditorMode::Normal {
                         editor.cursor_move_right(1)
                     }
                 }

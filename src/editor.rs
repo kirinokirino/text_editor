@@ -99,8 +99,8 @@ impl Font {
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum EditorMode {
-    normal,
-    insert,
+    Normal,
+    Insert,
 }
 
 pub struct Editor {
@@ -122,12 +122,12 @@ impl Editor {
             font: Font::new(),
             screen_width,
             text: Vec::new(),
-            mode: EditorMode::normal,
+            mode: EditorMode::Normal,
         }
     }
 
     pub fn type_char(&mut self, ch: char) {
-        if (self.mode != EditorMode::insert) {
+        if self.mode != EditorMode::Insert {
             return;
         }
         let position = self.cursor;
@@ -142,11 +142,11 @@ impl Editor {
     }
 
     pub fn normal_mode(&mut self) {
-        self.mode = EditorMode::normal;
+        self.mode = EditorMode::Normal;
     }
 
     pub fn insert_mode(&mut self) {
-        self.mode = EditorMode::insert;
+        self.mode = EditorMode::Insert;
     }
 
     pub fn backspace(&mut self) {
