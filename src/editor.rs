@@ -154,7 +154,9 @@ impl Editor {
             self.cursor_move_left(1);
             self.delete();
         } else {
-        	if (self.cursor.y == 0) { return; }
+            if (self.cursor.y == 0) {
+                return;
+            }
             if self.text.len() > self.cursor.y as usize {
                 let current_line = self.text.remove(self.cursor.y as usize);
                 self.cursor_move_up(1);
@@ -273,7 +275,12 @@ impl Editor {
         }
     }
 
+    pub fn get_text(&self) -> String {
+        self.text.iter().map(|line| format!("{}\n", line)).collect()
+    }
+
     pub fn set_text(&mut self, text: String) {
+        self.text = Vec::new();
         for line in text.lines() {
             self.text.push(line.to_string());
         }

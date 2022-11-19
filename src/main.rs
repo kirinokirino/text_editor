@@ -3,6 +3,7 @@ use minifb::{Key, KeyRepeat, Window, WindowOptions};
 use std::cell::RefCell;
 use std::env::current_dir;
 use std::fs;
+use std::path::PathBuf;
 use std::rc::Rc;
 
 mod cli;
@@ -21,8 +22,11 @@ fn main() {
     let mut starting_text = String::new();
     if args.unnamed.len() == 1 {
         path.push(args.unnamed[0].clone());
-        if let Ok(contents) = fs::read_to_string(path) {
+        if let Ok(contents) = fs::read_to_string(&path) {
+            println!("Reading file {}.", path.display());
             starting_text = contents;
+        } else {
+            println!("No file {}.", path.display())
         }
     }
     let mut window =
@@ -57,6 +61,14 @@ fn main() {
                         break 'running;
                     }
                 }
+                Key::S => {
+                    if window.is_key_down(Key::LeftCtrl) || window.is_key_down(Key::RightCtrl) {
+                        save_file(&path, editor.get_text());
+                    }
+                }
+                Key::Y => if editor.mode == EditorMode::Normal {
+                	save_file(&path, editor.get_text());
+                },
                 Key::Apostrophe => {
                     if editor.mode == EditorMode::Normal {
                         break 'running;
@@ -104,6 +116,17 @@ fn main() {
 
         keys.clear();
     }
+}
+
+fn save_file(path: &PathBuf, contents: String) {
+	if let Ok(_) = fs::metadata(path) {
+	    println!("Saving file {}", path.display());
+
+	    fs::write(path, contents.as_bytes());
+	} else {
+	    // TODO: ask for the path.
+		println!("Can't write to {}!", path.display());
+	}
 }
 
 type KeyVec = Rc<RefCell<Vec<u32>>>;
