@@ -1,6 +1,7 @@
 use std::cmp::min;
 use std::fs;
 use std::io;
+use std::mem;
 use std::path::Path;
 
 use crate::common::{GridPosition, Rgb};
@@ -38,7 +39,6 @@ impl LetterSprite {
             assert!(colors == "255", "Not yet support anything but 255 colors");
             assert!(split.next().is_none(), "Unknown additional header fields");
 
-            use std::mem;
             assert!(width == CHAR_WIDTH);
             assert!(height == CHAR_HEIGHT);
             let mut p: [mem::MaybeUninit<Rgb>; CHAR_HEIGHT * CHAR_WIDTH] =
@@ -153,6 +153,20 @@ impl Editor {
         if self.cursor.x >= 1 {
             self.cursor_move_left(1);
             self.delete();
+        } else {
+        	if (self.cursor.y == 0) { return; }
+            if self.text.len() > self.cursor.y as usize {
+                let current_line = self.text.remove(self.cursor.y as usize);
+                self.cursor_move_up(1);
+                if let Some(previous_line) = self.text.get_mut(self.cursor.y as usize) {
+                    self.cursor.x = previous_line.len() as u32;
+                    mem::replace(previous_line, format!("{previous_line}{current_line}"));
+                } else {
+                    self.text.insert(self.cursor.y as usize, current_line);
+                }
+            } else {
+                self.cursor_move_left(1);
+            }
         }
     }
 
@@ -168,6 +182,18 @@ impl Editor {
     }
 
     pub fn newline(&mut self) {
+        if let Some(current_line) = self.text.get_mut(self.cursor.y as usize) {
+            while self.cursor.x as usize > current_line.len() {
+                current_line.push(' ');
+            }
+            current_line.push('\n');
+            let next_line = current_line.split_off((self.cursor.x) as usize);
+            if self.text.len() == self.cursor.y as usize {
+                self.text.push(next_line);
+            } else {
+                self.text.insert(self.cursor.y as usize + 1, next_line);
+            }
+        }
         self.cursor = GridPosition::new(0, self.cursor.y.saturating_add(1));
     }
 
@@ -186,7 +212,16 @@ impl Editor {
     }
 
     pub fn cursor_move_left(&mut self, amount: u32) {
-        self.cursor.x = self.cursor.x.saturating_sub(amount);
+        self.cursor.x = match self.cursor.x {
+            0 => {
+                self.cursor_move_up(1);
+                self.text
+                    .get(self.cursor.y as usize)
+                    .unwrap_or(&"".to_string())
+                    .len() as u32
+            }
+            x => x.saturating_sub(amount),
+        }
     }
 
     pub fn cursor_move_right(&mut self, amount: u32) {

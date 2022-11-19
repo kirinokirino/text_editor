@@ -86,7 +86,9 @@ fn main() {
                 Key::Enter => editor.newline(),
                 Key::Delete => editor.delete(),
                 Key::Backspace => editor.backspace(),
-                _ => (),
+                key => {
+                    dbg!(key);
+                }
             }
         }
 
@@ -94,6 +96,8 @@ fn main() {
             if let Some(ch) = char::from_u32(*key) {
                 if ch.is_ascii_alphanumeric() || ch.is_ascii_punctuation() || ch == ' ' {
                     editor.type_char(ch);
+                } else {
+                    dbg!(ch);
                 }
             }
         }
