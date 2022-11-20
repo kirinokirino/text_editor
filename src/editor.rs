@@ -1,4 +1,5 @@
 use std::cmp::min;
+use std::fmt::{self, Display};
 use std::fs;
 use std::io;
 use std::mem;
@@ -101,6 +102,16 @@ impl Font {
 pub enum EditorMode {
     Normal,
     Insert,
+}
+
+impl Display for EditorMode {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let name = match self {
+            Self::Normal => "normal mode",
+            Self::Insert => "insert mode",
+        };
+        write!(f, "{name}")
+    }
 }
 
 pub struct Editor {
@@ -261,6 +272,9 @@ impl Editor {
         if !pos.is_inside(&self.viewport_position, &self.viewport_end()) {
             return;
         }
+        if (ch.is_whitespace()) {
+            return;
+        }
         let sprite = self.font.letter(ch).pixels;
         for y in 0..CHAR_HEIGHT {
             for x in 0..CHAR_WIDTH {
@@ -273,6 +287,21 @@ impl Editor {
                     + ((pos.x - self.viewport_position.x) as usize * CHAR_WIDTH + x)] = pixel;
             }
         }
+    }
+
+    pub fn draw_status_line(&mut self, screen: &mut [u32]) {
+        if self.viewport_size.1 < 10 {
+            return;
+        }
+        let y = self.viewport_size.1 - 1;
+        for (x, ch) in self.status_line().chars().enumerate() {
+            let pos = GridPosition::new(x as u32, y as u32);
+            self.draw_char(ch, pos, screen);
+        }
+    }
+
+    pub fn status_line(&self) -> String {
+        format!("{}", self.mode)
     }
 
     pub fn get_text(&self) -> String {
@@ -301,5 +330,6 @@ impl Editor {
             }
         }
         self.draw_char('_', self.cursor, screen);
+        self.draw_status_line(screen);
     }
 }

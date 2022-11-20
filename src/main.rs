@@ -66,9 +66,11 @@ fn main() {
                         save_file(&path, editor.get_text());
                     }
                 }
-                Key::Y => if editor.mode == EditorMode::Normal {
-                	save_file(&path, editor.get_text());
-                },
+                Key::Y => {
+                    if editor.mode == EditorMode::Normal {
+                        save_file(&path, editor.get_text());
+                    }
+                }
                 Key::Apostrophe => {
                     if editor.mode == EditorMode::Normal {
                         break 'running;
@@ -119,14 +121,14 @@ fn main() {
 }
 
 fn save_file(path: &PathBuf, contents: String) {
-	if let Ok(_) = fs::metadata(path) {
-	    println!("Saving file {}", path.display());
+    if let Ok(_) = fs::metadata(path) {
+        println!("Saving file {}", path.display());
 
-	    fs::write(path, contents.as_bytes());
-	} else {
-	    // TODO: ask for the path.
-		println!("Can't write to {}!", path.display());
-	}
+        fs::write(path, contents.as_bytes());
+    } else {
+        // TODO: ask for the path.
+        println!("Can't write to {}!", path.display());
+    }
 }
 
 type KeyVec = Rc<RefCell<Vec<u32>>>;
